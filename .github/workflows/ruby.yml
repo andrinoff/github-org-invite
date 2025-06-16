@@ -1,38 +1,40 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-# This workflow will download a prebuilt Ruby version, install dependencies and run tests with Rake
-# For more information see: https://github.com/marketplace/actions/setup-ruby-jruby-and-truffleruby
+# Name of your workflow
+name: Build and Deploy Jekyll site to GitHub Pages
 
-name: Ruby
-
+# Controls when the action will run. 
 on:
+  # Triggers the workflow on push events but only for the "main" branch
   push:
     branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+  
+  # Allows you to run this workflow manually from the Actions tab on GitHub
+  workflow_dispatch:
 
-permissions:
-  contents: read
-
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  test:
-
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        ruby-version: ['2.6', '2.7', '3.0']
+  # This workflow contains a single job called "build-and-deploy"
+  build-and-deploy:
+    runs-on: ubuntu-latest # Use a standard Linux server for the job
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Ruby
-    # To automatically get bug fixes and new Ruby versions for ruby/setup-ruby,
-    # change this to (see https://github.com/ruby/setup-ruby#versioning):
-    # uses: ruby/setup-ruby@v1
-      uses: ruby/setup-ruby@55283cc23133118229fd3f97f9336ee23a179fcf # v1.146.0
-      with:
-        ruby-version: ${{ matrix.ruby-version }}
-        bundler-cache: true # runs 'bundle install' and caches installed gems automatically
-    - name: Run tests
-      run: bundle exec rake
+      # 1. Downloads your repository code so the job can access it
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Sets up Ruby and Jekyll using a pre-made GitHub Action
+      - name: Setup Jekyll
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1' # The version of Ruby your project uses
+          bundler-cache: true # Automatically installs and caches gems
+
+      # 3. Builds the Jekyll site
+      - name: Build site
+        run: bundle exec jekyll build
+
+      # 4. Deploys the built site to the gh-pages branch
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site # The folder the build-in step generates
